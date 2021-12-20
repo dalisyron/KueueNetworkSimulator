@@ -116,7 +116,7 @@ class QueueNetworkSimulator(
 
     fun simulate() {
         // initialize start nodes
-        val timeLimit = 1000
+        val timeLimit = 3000
         val customerArrivalTimes = mutableListOf<Pair<Int, Double>>()
 
         for (node in network.startNodes) {
@@ -180,30 +180,7 @@ class QueueNetworkSimulator(
         val sortedLogs = arrivalDepartureLogsForNode[nodeId]!!.sortedBy {
             it.event.time
         }
-        val stableLogs = mutableListOf<ArrivalDepartureLog>()
-        var skip = true
-        val skipCount = (sortedLogs.size * 0.1).toInt()
-        var skipCountArrivals = 0
-        var skipCountDepartures = 0
-        var st = 0.0
-
-        for (log in sortedLogs) {
-            if (skip) {
-                if (log.event.type == EventType.ARRIVAL) {
-                    skipCountArrivals++
-                } else {
-                    skipCountDepartures++
-                }
-                if (skipCountArrivals == skipCountDepartures && skipCountDepartures == skipCount) {
-                    st = log.event.time
-                    skip = false
-                }
-            } else {
-                stableLogs.add(log)
-            }
-        }
-
-        var clock = st
+        var clock = 0.0
         var count = 0
         var totalSumL = 0.0
         var totalSumLQ = 0.0
@@ -213,7 +190,7 @@ class QueueNetworkSimulator(
 
         val startTime = mutableMapOf<Int, Double>()
 
-        for (log in stableLogs) {
+        for (log in sortedLogs) {
             totalSumL += (log.event.time - clock) * count
             totalSumLQ += (log.event.time - clock) * max(0, count - 1)
             totalSumPhi += (log.event.time - clock) * min(1, count)
