@@ -1,6 +1,14 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.5.10'
     id 'java'
+    id 'maven-publish'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.0.10'
+}
+
+javafx {
+    version = "17"
+    modules = ['javafx.controls', 'javafx.graphics']
 }
 
 group 'org.example'
@@ -8,13 +16,18 @@ version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
-    mavenCentral()
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+
+    // compileOnly group: 'guru.nidi', name: 'graphviz-java', version: '0.18.1'
+    implementation 'guru.nidi:graphviz-java:0.18.1'
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'org.graalvm.js:js:21.3.0'
+    implementation 'no.tornado:tornadofx:1.7.20'
 }
 
 test {

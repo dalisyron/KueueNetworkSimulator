@@ -1,3 +1,5 @@
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
@@ -31,6 +33,8 @@ class QueueNetworkSimulator(
     private val eventQueue: PriorityQueue<Event> = PriorityQueue<Event> { o1, o2 ->
         return@PriorityQueue o1.time.compareTo(o2.time)
     }
+
+    var report = ""
 
     private fun handleDeparture(nodeId: Int, customerId: Int) {
         val node = network.nodeById[nodeId]!!
@@ -114,9 +118,10 @@ class QueueNetworkSimulator(
         arrivalDepartureLogsForNode[event.nodeId]!!.add(ArrivalDepartureLog(event))
     }
 
-    fun simulate() {
+    fun simulate(): String {
+        report = ""
         // initialize start nodes
-        val timeLimit = 3000
+        val timeLimit = 1000
         val customerArrivalTimes = mutableListOf<Pair<Int, Double>>()
 
         for (node in network.startNodes) {
@@ -150,8 +155,8 @@ class QueueNetworkSimulator(
         var op = 0
 
         while (eventQueue.isNotEmpty()) {
-            if (op % 10 == 0) {
-                println(op)
+            if (op % 300 == 0) {
+                println(f((op / (timeLimit * 16.0)) * 100.0) + "%")
             }
             op++
             val strq = eventQueue.map { it -> "${it.type} | ${it.customerId} : ${it.time}" }.joinToString("\n")
@@ -174,12 +179,15 @@ class QueueNetworkSimulator(
         for (nodeId in network.nodeById.keys) {
             generateReportsForNode(nodeId)
         }
+        generateSystemWideReport()
+        return report
     }
 
     private fun generateReportsForNode(nodeId: Int) {
         val sortedLogs = arrivalDepartureLogsForNode[nodeId]!!.sortedBy {
             it.event.time
         }
+
         var clock = 0.0
         var count = 0
         var totalSumL = 0.0
@@ -212,7 +220,44 @@ class QueueNetworkSimulator(
         val W = totalSumW / clock
         val WQ = totalSumWQ / clock
         val phi = totalSumPhi / clock
-
-        println("L[$nodeId] : $L | LQ[$nodeId] : $LQ | W[$nodeId] : $W | WQ[$nodeId] : $WQ | phi[$nodeId] : $phi  ")
+        val st = "L[$nodeId] : ${f(L)} | LQ[$nodeId] : ${f(LQ)} | W[$nodeId] : ${f(W)} | WQ[$nodeId] : ${f(WQ)} | phi[$nodeId] : ${f(phi)}\n"
+        report += st
     }
+
+    private fun generateSystemWideReport() {
+        val logs = mutableListOf<ArrivalDepartureLog>()
+        arrivalDepartureLogsForNode.values.forEach {
+            it.forEach {
+                logs.add(it)
+            }
+        }
+
+        val sortedLogs = logs.sortedBy { it.event.time }
+        var clock = 0.0
+        var count = 0
+        var sum = 0.0
+
+        for (log in sortedLogs) {
+            sum += (log.event.time - clock) * count
+
+            clock = log.event.time
+
+            if (log.event.type == EventType.ARRIVAL) {
+                count++
+            } else {
+                count--
+            }
+        }
+        val N = sum / clock
+        val R = N / network.startNodes.sumOf { it.arrivalRate }
+        val st = "N = ${f(N)} | R = ${f(R)}\n"
+        report += st
+    }
+}
+
+private fun f(value: Double): String {
+    val df = DecimalFormat("#.###")
+    df.roundingMode = RoundingMode.CEILING
+    val label = df.format(value)
+    return label
 }
