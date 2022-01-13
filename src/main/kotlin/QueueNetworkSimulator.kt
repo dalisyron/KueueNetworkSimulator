@@ -121,7 +121,7 @@ class QueueNetworkSimulator(
     fun simulate(): String {
         report = ""
         // initialize start nodes
-        val timeLimit = 1000
+        val timeLimit = 300
         val customerArrivalTimes = mutableListOf<Pair<Int, Double>>()
 
         for (node in network.startNodes) {
